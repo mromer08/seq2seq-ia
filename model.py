@@ -43,35 +43,30 @@ dataset = ChatDataset(data_path, tokenizer, block_size)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 class Head(nn.Module):
-    """ one head of self-attention """
-
+    """Una cabeza de self-attention."""
     def __init__(self, head_size):
         super().__init__()
         self.key = nn.Linear(n_embd, head_size, bias=False)
         self.query = nn.Linear(n_embd, head_size, bias=False)
         self.value = nn.Linear(n_embd, head_size, bias=False)
         self.register_buffer('tril', torch.tril(torch.ones(block_size, block_size)))
-
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        # input of size (batch, time-step, channels)
-        # output of size (batch, time-step, head size)
-        B,T,C = x.shape
-        k = self.key(x)
-        q = self.query(x)
-        wei = q @ k.transpose(-2,-1) * k.shape[-1]**-0.5
-        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf'))
-        wei = F.softmax(wei, dim=-1)
+        B, T, C = x.shape
+        k = self.key(x)   # (B,T,hs)
+        q = self.query(x) # (B,T,hs)
+        wei = q @ k.transpose(-2,-1) * k.shape[-1]**-0.5 # (B, T, T)
+        wei = wei.masked_fill(self.tril[:T, :T] == 0, float('-inf')) 
+        wei = torch.softmax(wei, dim=-1) 
         wei = self.dropout(wei)
-        
         v = self.value(x)
         out = wei @ v
         return out
 
-class MultiHeadAttention(nn.Module):
-    """ multiple heads of self-attention in parallel """
 
+class MultiHeadAttention(nn.Module):
+    """Múltiples cabezas de self-attention en paralelo."""
     def __init__(self, num_heads, head_size):
         super().__init__()
         self.heads = nn.ModuleList([Head(head_size) for _ in range(num_heads)])
@@ -79,14 +74,13 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        out = torch.cat([h(x) for h in self.heads], dim=-1)
+        out = torch.cat([h(x) for h in self.heads], dim=-1) 
         out = self.dropout(self.proj(out))
         return out
 
 
-class FeedFoward(nn.Module):
-    """ a simple linear layer followed by a non-linearity """
-
+class FeedForward(nn.Module):
+    """Una capa lineal seguida de una no-linealidad."""
     def __init__(self, n_embd):
         super().__init__()
         self.net = nn.Sequential(
@@ -99,14 +93,14 @@ class FeedFoward(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-class Block(nn.Module):
-    """ Transformer block: communication followed by computation """
 
+class Block(nn.Module):
+    """Bloque Transformer: comunicación seguida de computación."""
     def __init__(self, n_embd, n_head):
         super().__init__()
         head_size = n_embd // n_head
         self.sa = MultiHeadAttention(n_head, head_size)
-        self.ffwd = FeedFoward(n_embd)
+        self.ffwd = FeedForward(n_embd)
         self.ln1 = nn.LayerNorm(n_embd)
         self.ln2 = nn.LayerNorm(n_embd)
 
@@ -118,16 +112,15 @@ class Block(nn.Module):
         return x
 
 
-# Definición del modelo
 class GPTLanguageModel(nn.Module):
+    """Modelo de lenguaje GPT basado en Transformer."""
     def __init__(self, vocab_size):
         super().__init__()
         self.token_embedding_table = nn.Embedding(vocab_size, n_embd)
         self.position_embedding_table = nn.Embedding(block_size, n_embd)
-        self.blocks = nn.Sequential(*[Block(n_embd, n_head) for _ in range(n_layer)])
+        self.blocks = nn.Sequential(*[Block(n_embd, n_head=n_head) for _ in range(n_layer)])
         self.ln_f = nn.LayerNorm(n_embd)
         self.lm_head = nn.Linear(n_embd, vocab_size)
-
         self.apply(self._init_weights)
 
     def _init_weights(self, module):
@@ -152,6 +145,17 @@ class GPTLanguageModel(nn.Module):
         else:
             loss = nn.CrossEntropyLoss()(logits.view(-1, logits.size(-1)), targets.view(-1))
             return logits, loss
+
+    def generate(self, index, max_new_tokens):
+        for _ in range(max_new_tokens):
+            index_cond = index[:, -block_size:]
+            logits, loss = self.forward(index_cond)
+            logits = logits[:, -1, :]
+            probs = torch.softmax(logits, dim=-1)
+            index_next = torch.multinomial(probs, num_samples=1)
+            index = torch.cat((index, index_next), dim=1)
+        return index
+
 
 # Inicializar el modelo
 model = GPTLanguageModel(vocab_size).to(device)

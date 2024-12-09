@@ -16,56 +16,61 @@ mucho gusto
 quien eres?
 soy batman
 
-hola, como estas?
-yo bien y tu?
-hola
-que tal estas?
-buenas tardes
-mucho gusto
-quien eres?
-soy batman
 
-hola, como estas?
-yo bien y tu?
-hola
-que tal estas?
-buenas tardes
-mucho gusto
-quien eres?
-soy batman
+usuario: hola, ¿cómo estás?
+chatbot: hola, estoy bien. ¿y tú?
+usuario: todo bien, gracias. ¿qué puedes hacer?
+chatbot: puedo responder preguntas, charlar contigo o ayudarte con información. ¿en qué te puedo ayudar?
 
-hola, como estas?
-yo bien y tu?
-hola
-que tal estas?
-buenas tardes
-mucho gusto
-quien eres?
-soy batman
+usuario: ¿cuál es el clima hoy?
+chatbot: no tengo acceso al clima actual, pero puedes buscar en una aplicación de clima o preguntar en un navegador.
+usuario: entendido, gracias.
+chatbot: de nada. ¿algo más?
 
-hola, como estas?
-yo bien y tu?
-hola
-que tal estas?
-buenas tardes
-mucho gusto
-quien eres?
-soy batman
+usuario: cuéntame un chiste.
+chatbot: ¡claro! ¿qué hace una abeja en el gimnasio? ¡zum-ba!
+usuario: jajaja, está bueno.
+chatbot: ¡me alegra que te gustara!
 
-hola, como estas?
-yo bien y tu?
-hola
-que tal estas?
-buenas tardes
-mucho gusto
-quien eres?
-soy batman
+usuario: ¿qué hora es?
+chatbot: no tengo un reloj, pero puedes revisar en tu dispositivo.
+usuario: oh, cierto. gracias.
+chatbot: de nada, ¡para eso estoy!
 
-hola, como estas?
-yo bien y tu?
-hola
-que tal estas?
-buenas tardes
-mucho gusto
-quien eres?
-soy batman
+usuario: ¿puedes ayudarme a estudiar matemáticas?
+chatbot: por supuesto, ¿qué tema de matemáticas necesitas practicar?
+usuario: geometría.
+chatbot: bien, ¿quieres saber algo específico como áreas, volúmenes o teoremas?
+usuario: áreas.
+chatbot: muy bien. para calcular el área de un rectángulo, usas la fórmula base por altura. ¿tienes algún ejemplo?
+usuario: sí, base 5 y altura 8.
+chatbot: perfecto. el área es 5 x 8 = 40 unidades cuadradas.
+usuario: gracias.
+chatbot: de nada. ¡éxito en tu estudio!
+
+usuario: ¿qué día es hoy?
+chatbot: no puedo consultar el calendario, pero si me dices el día anterior, puedo ayudarte a calcular.
+usuario: ayer fue martes.
+chatbot: entonces hoy es miércoles.
+usuario: tienes razón.
+chatbot: ¡genial! ¿en qué más puedo ayudarte?
+
+usuario: estoy aburrido.
+chatbot: podemos jugar un juego, charlar sobre un tema interesante o aprender algo nuevo. ¿qué prefieres?
+usuario: jugar un juego.
+chatbot: de acuerdo, juguemos a "adivina el número". estoy pensando en un número del 1 al 10. ¿cuál crees que es?
+usuario: el 5.
+chatbot: cerca, pero no es el 5. inténtalo de nuevo.
+usuario: el 7.
+chatbot: ¡correcto! el número era el 7. ¡buen trabajo!
+usuario: gracias, estuvo divertido.
+chatbot: me alegra que te divirtieras. ¡cuando quieras jugamos otra vez!
+
+usuario: cuéntame algo interesante.
+chatbot: claro. ¿sabías que las mariposas pueden saborear con sus patas?
+usuario: no lo sabía. ¡es curioso!
+chatbot: sí, el mundo natural tiene cosas fascinantes. ¿quieres escuchar más datos curiosos?
+usuario: claro, dame otro.
+chatbot: las estrellas de mar no tienen cerebro, pero usan un sistema nervioso para moverse y responder a su entorno.
+usuario: increíble.
+chatbot: ¡lo es! el mundo siempre tiene algo nuevo por descubrir.

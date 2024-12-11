@@ -1,6 +1,9 @@
-let encoderModel, decoderModel;
 
-// Función para preprocesar la oración de entrada
+/**
+ * Preprocesa la oración de entrada.
+ * @param {string} w - La oración de entrada.
+ * @returns {string} - La oración preprocesada.
+ */
 function preprocessSentence(w) {
     w = w.toLowerCase().trim();
     w = w.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -11,7 +14,11 @@ function preprocessSentence(w) {
     return w;
 }
 
-// Función para tokenizar la entrada
+/**
+ * Tokeniza la oración de entrada.
+ * @param {string} sentence - La oración preprocesada.
+ * @returns {tf.Tensor} - El tensor de entrada tokenizado.
+ */
 function tokenizeInput(sentence) {
     const words = sentence.split(" ");
     let tokens = words.map(word => inp_lang_word_index[word] || 0);
@@ -25,13 +32,17 @@ function tokenizeInput(sentence) {
     return tf.tensor([tokens], [1, max_length_inp], 'float32');
 }
 
-// Función para inicializar el estado oculto
+/**
+ * Inicializa el estado oculto.
+ * @returns {tf.Tensor} - El tensor de estado oculto inicial.
+ */
 function initializeHiddenState() {
-    // El hidden suele ser float32. Ajusta si era float32 en tu entrenamiento.
     return tf.zeros([1, units], 'float32');
 }
 
-// Función para cargar los modelos de encoder y decoder
+/**
+ * Carga los modelos de encoder y decoder.
+ */
 async function loadModels() {
     try {
         // Cambia a loadLayersModel si tus modelos son de Keras
@@ -48,8 +59,13 @@ async function loadModels() {
     }
 }
 
-// Función para evaluar una oración y generar una respuesta
+/**
+ * Evalúa una oración y genera una respuesta utilizando el modelo encoder-decoder.
+ * @param {string} sentence - La oración de entrada del usuario.
+ * @returns {string} - La respuesta generada por el bot.
+ */
 async function evaluate(sentence) {
+    // Preprocesar y tokenizar la oración de entrada
     sentence = preprocessSentence(sentence);
     const inputs = tokenizeInput(sentence);
     let hidden = initializeHiddenState();
@@ -57,8 +73,8 @@ async function evaluate(sentence) {
     let result = "";
 
     try {
-        // Ejecutar el encoder de forma síncrona usando predict
-        // Asumiendo que el encoderModel devuelve [enc_out, enc_hidden]
+        // Ejecutar el encoder
+        // Asumimos que encoderModel.predict devuelve [enc_out, enc_hidden]
         const encOutputs = encoderModel.predict([inputs, hidden]);
         const enc_out = encOutputs[0];
         const enc_hidden = encOutputs[1];
@@ -71,8 +87,8 @@ async function evaluate(sentence) {
         let dec_input = tf.tensor([[targ_lang_word_index['<start>']]], [1, 1], 'float32');
 
         for (let t = 0; t < max_length_targ; t++) {
-            // Ejecutar el decoder de forma síncrona usando predict
-            // Asumiendo que el decoderModel devuelve [predictions, dec_hidden]
+            // Ejecutar el decoder
+            // Asumimos que decoderModel.predict devuelve [predictions, dec_hidden]
             const decOutputs = decoderModel.predict([dec_input, dec_hidden, enc_out]);
             const predictions = decOutputs[0];
             dec_hidden = decOutputs[1];
@@ -108,7 +124,9 @@ async function evaluate(sentence) {
     }
 }
 
-// Función para enviar un mensaje y recibir una respuesta del bot
+/**
+ * Envía un mensaje y recibe una respuesta del bot.
+ */
 async function sendMessage() {
     const userInputElem = document.getElementById('userInput');
     const chatContainer = document.getElementById('chatContainer');

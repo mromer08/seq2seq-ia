@@ -62,14 +62,10 @@ async function evaluate(sentence) {
     // Estado inicial del encoder
     let hidden = initializeHiddenState();
 
-    // Ejecutar encoder con executeAsync()
-    // No especificamos las salidas por nombre, tomamos todo el array resultante.
-    const encOutputAndState = await encoderModel.executeAsync({
-        "keras_tensor_17": inputs,
-        "keras_tensor_18": hidden
-    });
+    // Ejecutar encoder con executeAsync() usando un array de entradas en el orden correcto
+    const encOutputAndState = await encoderModel.executeAsync([inputs, hidden]);
     
-    // Según lo obtenido anteriormente, encOutputAndState devuele un array
+    // Según lo obtenido anteriormente, encOutputAndState devuelve un array
     // donde encOutputAndState[0] = enc_out, encOutputAndState[1] = enc_hidden.
     let enc_out = encOutputAndState[0]; 
     let enc_hidden = encOutputAndState[1];
@@ -80,12 +76,8 @@ async function evaluate(sentence) {
 
     let result = "";
     for (let t = 0; t < max_length_targ; t++) {
-        // Igual que con el encoder, no especificamos las salidas por nombre
-        const decOutputAndState = await decoderModel.executeAsync({
-            'keras_tensor_21': dec_input,
-            'keras_tensor_22': dec_hidden,
-            'keras_tensor_23': enc_out
-        });
+        // Ejecutar decoder usando un array de entradas en el orden correcto
+        const decOutputAndState = await decoderModel.executeAsync([dec_input, dec_hidden, enc_out]);
 
         // Suponiendo decOutputAndState[0] = predictions, decOutputAndState[1] = dec_hidden, decOutputAndState[2] = attention (si existe)
         let predictions = decOutputAndState[0];

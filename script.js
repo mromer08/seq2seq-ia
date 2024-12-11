@@ -1,4 +1,3 @@
-let encoderModel, decoderModel;
 
 /**
  * Función para normalizar el texto tal como se hizo en Python.
@@ -27,7 +26,7 @@ function tokenizeInput(sentence) {
     if (tokens.length > max_length_inp) {
         tokens = tokens.slice(0, max_length_inp);
     }
-    return tf.tensor([tokens], [1, max_length_inp], 'float32'); // 'float32' para word indices
+    return tf.tensor([tokens], [1, max_length_inp], 'float32'); // 'float32' para que coincida con el modelo
 }
 
 /**
@@ -77,12 +76,14 @@ async function evaluate(sentence) {
     sentence = preprocessSentence(sentence);
     const inputs = tokenizeInput(sentence);
 
-    console.log("Inputs shape:", inputs.shape); // [1, max_length_inp]
+    console.log("Inputs shape:", inputs.shape); // [1, 62]
+    console.log("Inputs dtype:", inputs.dtype); // 'float32'
 
     // Estado inicial del encoder
     let hidden = initializeHiddenState();
 
-    console.log("Hidden shape:", hidden.shape); // [1, units]
+    console.log("Hidden shape:", hidden.shape); // [1, 512]
+    console.log("Hidden dtype:", hidden.dtype); // 'float32'
 
     // Ejecutar encoder con executeAsync() usando un objeto con nombres completos de tensores
     let encOutputAndState;
@@ -98,7 +99,9 @@ async function evaluate(sentence) {
 
     // Verifica las formas de las salidas
     console.log("Enc_out shape:", encOutputAndState[0].shape);
+    console.log("Enc_out dtype:", encOutputAndState[0].dtype);
     console.log("Enc_hidden shape:", encOutputAndState[1].shape);
+    console.log("Enc_hidden dtype:", encOutputAndState[1].dtype);
 
     let enc_out = encOutputAndState[0]; 
     let enc_hidden = encOutputAndState[1];

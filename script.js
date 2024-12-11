@@ -60,8 +60,8 @@ async function evaluate(sentence) {
     // Ajustar si el modelo exportado tiene nombres distintos de entrada.
     // Suponiendo que el modelo fue guardado con orden establecida:
     const encOutputAndState = encoderModel.execute(
-        { 'input_1': inputs, 'input_2': hidden },  // ajustar nombres según tu modelo exportado
-        ['Identity','Identity_1'] // ajustar nombres si son distintos (basado en el modelo)
+        { "keras_tensor_17": inputs, "keras_tensor_18": hidden },  // ajustar nombres según tu modelo exportado
+        ['Identity_1','Identity'] // ajustar nombres si son distintos (basado en el modelo)
     );
     let enc_out = encOutputAndState[0]; 
     let enc_hidden = encOutputAndState[1];
@@ -74,8 +74,8 @@ async function evaluate(sentence) {
     for (let t = 0; t < max_length_targ; t++) {
         // Decoder input: [decoder_input, decoder_state_input, decoder_enc_out_input]
         const decOutputAndState = decoderModel.execute(
-            { 'input_1': dec_input, 'input_2': dec_hidden, 'input_3': enc_out },
-            ['Identity','Identity_1','Identity_2'] // ajustar nombres si difieren
+            { 'keras_tensor_21': dec_input, 'keras_tensor_22': dec_hidden, 'keras_tensor_23': enc_out },
+            ['Identity_2','Identity_1','Identity'] // ajustar nombres si difieren
         );
         let predictions = decOutputAndState[0];
         dec_hidden = decOutputAndState[1]; 

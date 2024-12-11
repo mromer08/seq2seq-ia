@@ -58,7 +58,7 @@ async function evaluate(sentence) {
 
     // Ejecutar encoder
     // Ajusta los nombres según tu modelo exportado (usa console.log para ver encoderModel.inputs/outputs)
-    const encOutputAndState = encoderModel.execute(
+    const encOutputAndState = await encoderModel.executeAsync(
         { "keras_tensor_17": inputs, "keras_tensor_18": hidden },  // Ajustar si difiere
         ['Identity_1','Identity'] // Ajustar si difiere
     );
@@ -72,7 +72,7 @@ async function evaluate(sentence) {
     let result = "";
     for (let t = 0; t < max_length_targ; t++) {
         // Ajustar nombres según decoderModel.inputs/outputs
-        const decOutputAndState = decoderModel.execute(
+        const decOutputAndState = await decoderModel.executeAsync(
             { 'keras_tensor_21': dec_input, 'keras_tensor_22': dec_hidden, 'keras_tensor_23': enc_out },
             ['Identity_2','Identity_1','Identity'] // Ajustar si difiere
         );

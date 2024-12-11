@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Chatbot</title>
+</head>
+<body>
+    <h1>Chatbot en JavaScript</h1>
+    <div>
+        <input type="text" id="userInput" placeholder="Escribe algo..." style="width:300px;" />
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
+    <div id="chatContainer" style="margin-top:20px;border:1px solid #ccc;padding:10px;width:400px;height:300px;overflow:auto;"></div>
+
+    <!-- Cargar TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+    <!-- Primero cargamos los datos del tokenizador y parámetros -->
+    <script>
+        let inp_lang_word_index = {};
+        let targ_lang_word_index = {};
+        let targ_lang_index_word = {};
+        let max_length_inp = 0;
+        let max_length_targ = 0;
+        let units = 512; // Ajustar este valor según el modelo entrenado
+
+        async function loadTokenizerData() {
+            const inpResponse = await fetch('inp_lang_word_index.json');
+            inp_lang_word_index = await inpResponse.json();
+
+            const targResponse = await fetch('targ_lang_word_index.json');
+            targ_lang_word_index = await targResponse.json();
+
+            const tokDataResponse = await fetch('tokenizer_data.json');
+            const tokData = await tokDataResponse.json();
+            max_length_inp = tokData.max_length_inp;
+            max_length_targ = tokData.max_length_targ;
+
+            // Crear el índice inverso para el target
+            for (let word in targ_lang_word_index) {
+                targ_lang_index_word[targ_lang_word_index[word]] = word;
+            }
+
+            console.log("Tokenizers y datos cargados:", {inp_lang_word_index, targ_lang_word_index, max_length_inp, max_length_targ});
+        }
+
+        loadTokenizerData();
+    </script>
+    <!-- Ahora cargamos el script principal -->
+    <script src="script.js"></script>
+</body>
+</html>

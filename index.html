@@ -1,51 +1,120 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<title>Chatbot</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot en Español</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script defer src="chatbot.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .chat-container {
+            max-width: 600px;
+            margin: auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .messages {
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .message {
+            margin: 5px 0;
+        }
+        .message.user {
+            text-align: right;
+            color: blue;
+        }
+        .message.bot {
+            text-align: left;
+            color: green;
+        }
+    </style>
 </head>
 <body>
-    <h1>Chatbot en JavaScript</h1>
-    <div>
-        <input type="text" id="userInput" placeholder="Escribe algo..." style="width:300px;" />
-        <button onclick="sendMessage()">Enviar</button>
+    <div class="chat-container">
+        <div class="messages" id="messages"></div>
+        <input type="text" id="userInput" placeholder="Escribe tu mensaje..." style="width: 80%;">
+        <button id="sendButton">Enviar</button>
     </div>
-    <div id="chatContainer" style="margin-top:20px;border:1px solid #ccc;padding:10px;width:400px;height:300px;overflow:auto;"></div>
 
-    <!-- Cargar TensorFlow.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
-    <!-- Primero cargamos los datos del tokenizador y parámetros -->
     <script>
-        let inp_lang_word_index = {};
-        let targ_lang_word_index = {};
-        let targ_lang_index_word = {};
-        let max_length_inp = 0;
-        let max_length_targ = 0;
-        let units = 512; // Ajustar este valor según el modelo entrenado
+        let model, inputTokenizer, outputTokenizer;
 
-        async function loadTokenizerData() {
-            const inpResponse = await fetch('inp_lang_word_index.json');
-            inp_lang_word_index = await inpResponse.json();
+        const initializeChatbot = async () => {
+            try {
+                model = await tf.loadLayersModel('./model_js/model.json');
+                inputTokenizer = await (await fetch('./input_tokenizer.json')).json();
+                outputTokenizer = await (await fetch('./output_tokenizer.json')).json();
+                console.log("Modelo y tokenizers cargados correctamente");
+            } catch (error) {
+                console.error("Error al cargar los archivos:", error);
+            }
+        };
 
-            const targResponse = await fetch('targ_lang_word_index.json');
-            targ_lang_word_index = await targResponse.json();
+        const addMessage = (text, sender) => {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Desplazar hacia abajo
+        };
 
-            const tokDataResponse = await fetch('tokenizer_data.json');
-            const tokData = await tokDataResponse.json();
-            max_length_inp = tokData.max_length_inp;
-            max_length_targ = tokData.max_length_targ;
+        const sendMessage = async () => {
+            const userInput = document.getElementById('userInput').value.trim();
+            if (!userInput) return;
 
-            // Crear el índice inverso para el target
-            for (let word in targ_lang_word_index) {
-                targ_lang_index_word[targ_lang_word_index[word]] = word;
+            addMessage(userInput, 'user');
+            document.getElementById('userInput').value = '';
+
+            const textToSequence = (text, tokenizer) => {
+                const words = text.split(' ');
+                return words.map((word) => tokenizer.config.word_index[word] || 0);
+            };
+
+            const padSequence = (sequence, maxLength) => {
+                while (sequence.length < maxLength) {
+                    sequence.push(0);
+                }
+                return sequence.slice(0, maxLength);
+            };
+
+            const inputSequence = padSequence(
+                textToSequence(userInput, inputTokenizer),
+                10
+            );
+
+            const states = await model.predict(tf.tensor([inputSequence]));
+            let response = [];
+            let currentWord = "<sos>";
+
+            for (let i = 0; i < 10; i++) {
+                const token = outputTokenizer.config.word_index[currentWord] || 0;
+                const prediction = await model.predict([tf.tensor([[token]]), states]);
+                const predictedIndex = prediction.argMax(-1).dataSync()[0];
+                currentWord = Object.keys(outputTokenizer.config.index_word)
+                    .find(key => outputTokenizer.config.index_word[key] == predictedIndex);
+
+                if (currentWord === "<eos>" || !currentWord) break;
+                response.push(currentWord);
             }
 
-            console.log("Tokenizers y datos cargados:", {inp_lang_word_index, targ_lang_word_index, max_length_inp, max_length_targ});
-        }
+            addMessage(response.join(' '), 'bot');
+        };
 
-        loadTokenizerData();
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        initializeChatbot();
     </script>
-    <!-- Ahora cargamos el script principal -->
-    <script src="script.js"></script>
 </body>
 </html>

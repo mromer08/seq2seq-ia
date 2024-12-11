@@ -27,7 +27,7 @@ function tokenizeInput(sentence) {
     if (tokens.length > max_length_inp) {
         tokens = tokens.slice(0, max_length_inp);
     }
-    return tf.tensor([tokens], [1, max_length_inp], 'int32'); // 'int32' para word indices
+    return tf.tensor([tokens], [1, max_length_inp], 'float32'); // 'float32' para word indices
 }
 
 /**
@@ -105,7 +105,7 @@ async function evaluate(sentence) {
 
     // Iniciar decoder
     let dec_hidden = enc_hidden;
-    let dec_input = tf.tensor([[targ_lang_word_index['<start>']]], [1,1], 'int32'); // 'int32' para word indices
+    let dec_input = tf.tensor([[targ_lang_word_index['<start>']]], [1,1], 'float32'); // 'float32' para word indices
 
     let result = "";
     for (let t = 0; t < max_length_targ; t++) {
@@ -138,7 +138,7 @@ async function evaluate(sentence) {
         // Libera el tensor dec_input anterior si no es necesario
         dec_input.dispose();
 
-        dec_input = tf.tensor([[predicted_id]], [1,1], 'int32'); // 'int32' para word indices
+        dec_input = tf.tensor([[predicted_id]], [1,1], 'float32'); // 'float32' para word indices
     }
 
     // Libera los tensores utilizados

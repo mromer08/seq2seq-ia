@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot en Español</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script defer src="chatbot.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script> <!-- TensorFlow.js -->
+    <script defer src="chatbot.js"></script> <!-- Tu archivo JS donde está el código -->
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            background-color: #f4f4f9;
         }
         .chat-container {
             max-width: 600px;
@@ -17,7 +18,7 @@
             border: 1px solid #ccc;
             padding: 20px;
             border-radius: 10px;
-            background-color: #f9f9f9;
+            background-color: #fff;
         }
         .messages {
             margin-bottom: 20px;
@@ -35,6 +36,22 @@
             text-align: left;
             color: green;
         }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -47,17 +64,19 @@
     <script>
         let model, inputTokenizer, outputTokenizer;
 
+        // Función para inicializar el chatbot y cargar los archivos necesarios
         const initializeChatbot = async () => {
             try {
-                model = await tf.loadLayersModel('./model_js/model.json');
-                inputTokenizer = await (await fetch('./input_tokenizer.json')).json();
-                outputTokenizer = await (await fetch('./output_tokenizer.json')).json();
+                model = await tf.loadLayersModel('./model_js/model.json'); // Cargar el modelo
+                inputTokenizer = await (await fetch('./input_tokenizer.json')).json(); // Cargar el tokenizer de entrada
+                outputTokenizer = await (await fetch('./output_tokenizer.json')).json(); // Cargar el tokenizer de salida
                 console.log("Modelo y tokenizers cargados correctamente");
             } catch (error) {
                 console.error("Error al cargar los archivos:", error);
             }
         };
 
+        // Función para añadir un mensaje a la interfaz
         const addMessage = (text, sender) => {
             const messagesDiv = document.getElementById('messages');
             const messageDiv = document.createElement('div');
@@ -67,53 +86,52 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight; // Desplazar hacia abajo
         };
 
+        // Función para enviar el mensaje del usuario
         const sendMessage = async () => {
             const userInput = document.getElementById('userInput').value.trim();
             if (!userInput) return;
 
             addMessage(userInput, 'user');
-            document.getElementById('userInput').value = '';
+            document.getElementById('userInput').value = ''; // Limpiar el campo de entrada
 
             const textToSequence = (text, tokenizer) => {
                 const words = text.split(' ');
-                return words.map((word) => tokenizer.config.word_index[word] || 0);
+                return words.map((word) => tokenizer[word] || 0); // Si no existe la palabra, asignar 0 (padding)
             };
 
             const padSequence = (sequence, maxLength) => {
                 while (sequence.length < maxLength) {
-                    sequence.push(0);
+                    sequence.push(0); // Añadir padding
                 }
-                return sequence.slice(0, maxLength);
+                return sequence.slice(0, maxLength); // Limitar al tamaño máximo
             };
 
-            const inputSequence = padSequence(
-                textToSequence(userInput, inputTokenizer),
-                10
-            );
+            const inputSequence = padSequence(textToSequence(userInput, inputTokenizer), 10); // Convertir a secuencia y paddear
 
-            const states = await model.predict(tf.tensor([inputSequence]));
+            const states = await model.predict(tf.tensor([inputSequence])); // Obtener el estado del encoder
             let response = [];
-            let currentWord = "<sos>";
+            let currentWord = "<sos>"; // Comenzar con la etiqueta de inicio
 
             for (let i = 0; i < 10; i++) {
-                const token = outputTokenizer.config.word_index[currentWord] || 0;
+                const token = outputTokenizer[currentWord] || 0;
                 const prediction = await model.predict([tf.tensor([[token]]), states]);
                 const predictedIndex = prediction.argMax(-1).dataSync()[0];
-                currentWord = Object.keys(outputTokenizer.config.index_word)
-                    .find(key => outputTokenizer.config.index_word[key] == predictedIndex);
+                currentWord = Object.keys(outputTokenizer)
+                    .find(key => outputTokenizer[key] === predictedIndex);
 
-                if (currentWord === "<eos>" || !currentWord) break;
+                if (currentWord === "<eos>" || !currentWord) break; // Detener si llega a <eos>
                 response.push(currentWord);
             }
 
-            addMessage(response.join(' '), 'bot');
+            addMessage(response.join(' '), 'bot'); // Mostrar la respuesta del bot
         };
 
-        document.getElementById('sendButton').addEventListener('click', sendMessage);
+        document.getElementById('sendButton').addEventListener('click', sendMessage); // Enviar mensaje con botón
         document.getElementById('userInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
+            if (e.key === 'Enter') sendMessage(); // Enviar mensaje al presionar Enter
         });
 
+        // Inicializar el chatbot cuando se cargue la página
         initializeChatbot();
     </script>
 </body>

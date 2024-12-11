@@ -2,7 +2,6 @@ let encoderModel, decoderModel;
 
 /**
  * Función para normalizar el texto tal como se hizo en Python.
- * Esta es una simplificación. Ajusta las regex según el preprocessing real.
  */
 function preprocessSentence(w) {
     w = w.toLowerCase().trim();
@@ -19,7 +18,8 @@ function preprocessSentence(w) {
  * y la rellena hasta max_length_inp.
  */
 function tokenizeInput(sentence) {
-    let tokens = sentence.split(" ").map(word => inp_lang_word_index[word] || 0);
+    const words = sentence.split(" ");
+    let tokens = words.map(word => inp_lang_word_index[word] || 0);
     // Rellenar con ceros hasta max_length_inp
     while (tokens.length < max_length_inp) {
         tokens.push(0);
@@ -43,6 +43,7 @@ function initializeHiddenState() {
 async function loadModels() {
     encoderModel = await tf.loadGraphModel('./encoder_model_js/model.json');
     decoderModel = await tf.loadGraphModel('./decoder_model_js/model.json');
+    console.log("Modelos cargados exitosamente!");
 }
 
 /**
@@ -56,12 +57,10 @@ async function evaluate(sentence) {
     let hidden = initializeHiddenState();
 
     // Ejecutar encoder
-    // Encoder model input: [encoder_input, encoder_hidden_input]
-    // Ajustar si el modelo exportado tiene nombres distintos de entrada.
-    // Suponiendo que el modelo fue guardado con orden establecida:
+    // Ajusta los nombres según tu modelo exportado (usa console.log para ver encoderModel.inputs/outputs)
     const encOutputAndState = encoderModel.execute(
-        { "keras_tensor_17": inputs, "keras_tensor_18": hidden },  // ajustar nombres según tu modelo exportado
-        ['Identity_1','Identity'] // ajustar nombres si son distintos (basado en el modelo)
+        { "keras_tensor_17": inputs, "keras_tensor_18": hidden },  // Ajustar si difiere
+        ['Identity_1','Identity'] // Ajustar si difiere
     );
     let enc_out = encOutputAndState[0]; 
     let enc_hidden = encOutputAndState[1];
@@ -72,16 +71,14 @@ async function evaluate(sentence) {
 
     let result = "";
     for (let t = 0; t < max_length_targ; t++) {
-        // Decoder input: [decoder_input, decoder_state_input, decoder_enc_out_input]
+        // Ajustar nombres según decoderModel.inputs/outputs
         const decOutputAndState = decoderModel.execute(
             { 'keras_tensor_21': dec_input, 'keras_tensor_22': dec_hidden, 'keras_tensor_23': enc_out },
-            ['Identity_2','Identity_1','Identity'] // ajustar nombres si difieren
+            ['Identity_2','Identity_1','Identity'] // Ajustar si difiere
         );
         let predictions = decOutputAndState[0];
         dec_hidden = decOutputAndState[1]; 
-        // att_weights = decOutputAndState[2] (si lo necesitas)
 
-        // Obtener índice con mayor probabilidad
         const predicted_id = (await predictions.argMax(-1).data())[0];
         const predicted_word = targ_lang_index_word[predicted_id];
 
@@ -91,7 +88,7 @@ async function evaluate(sentence) {
 
         result += predicted_word + " ";
 
-        // Actualizar dec_input con la palabra predicha
+        // Actualizar dec_input
         dec_input = tf.tensor([[predicted_id]], [1,1], 'int32');
     }
 
@@ -127,6 +124,4 @@ async function sendMessage() {
 }
 
 // Cargar los modelos al iniciar
-loadModels().then(() => {
-    console.log("Modelos cargados exitosamente!");
-});
+loadModels();

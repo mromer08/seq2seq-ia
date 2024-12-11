@@ -1,11 +1,11 @@
 let encoderModel, decoderModel;
 
 /**
- * Función para normalizar el texto tal como se hizo en Python.
+ * Normaliza el texto.
  */
 function preprocessSentence(w) {
     w = w.toLowerCase().trim();
-    w = w.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // remover acentos
+    w = w.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     w = w.replace(/([?.!,¿])/g, " $1 ");
     w = w.replace(/\s+/g, " ");
     w = w.trim();
@@ -14,31 +14,30 @@ function preprocessSentence(w) {
 }
 
 /**
- * Convierte una frase en una secuencia de índices usando inp_lang_word_index
- * y la rellena hasta max_length_inp.
+ * Convierte una frase a secuencia de índices (INT32).
  */
 function tokenizeInput(sentence) {
     const words = sentence.split(" ");
     let tokens = words.map(word => inp_lang_word_index[word] || 0);
-    // Rellenar con ceros hasta max_length_inp
     while (tokens.length < max_length_inp) {
         tokens.push(0);
     }
     if (tokens.length > max_length_inp) {
         tokens = tokens.slice(0, max_length_inp);
     }
-    return tf.tensor([tokens], [1, max_length_inp], 'float32');
+    // Usar int32, ya que normalmente las entradas a embeddings son int32
+    return tf.tensor([tokens], [1, max_length_inp], 'int32');
 }
 
 /**
- * Genera un vector de estado oculto inicial (cero).
+ * Genera estado oculto inicial (float32 si el modelo así lo requiere).
  */
 function initializeHiddenState() {
     return tf.zeros([1, units], 'float32');
 }
 
 /**
- * Función para cargar los modelos TF.js
+ * Cargar modelos.
  */
 async function loadModels() {
     encoderModel = await tf.loadGraphModel('./encoder_model_js/model.json');
@@ -47,24 +46,25 @@ async function loadModels() {
 
     console.log("Entradas encoder:", encoderModel.inputs);
     console.log("Salidas encoder:", encoderModel.outputs);
-
     console.log("Entradas decoder:", decoderModel.inputs);
     console.log("Salidas decoder:", decoderModel.outputs);
 }
 
 /**
- * Función para evaluar la entrada y obtener la respuesta del chatbot
+ * Evaluar la frase.
  */
 async function evaluate(sentence) {
     sentence = preprocessSentence(sentence);
     const inputs = tokenizeInput(sentence);
-
-    // Estado inicial del encoder
     let hidden = initializeHiddenState();
 
-    // Antes se especificaban salidas, ahora no.
-    // executeAsync() devolverá un array con todas las salidas en su orden.
-    // Según tu modelo: encoder da [enc_out, enc_hidden].
+    // Llamar sin especificar salidas
+    // Usar array en lugar de objeto si el objeto falla.
+    // Primero prueba con objeto usando exactamente los nombres dados por encoderModel.inputs.
+    // Si no funciona, intenta con array:
+    // const encOutputAndState = await encoderModel.executeAsync([inputs, hidden]);
+    
+    // Si los nombres son exactamente 'keras_tensor_17' y 'keras_tensor_18' sin :0
     const encOutputAndState = await encoderModel.executeAsync({
         "keras_tensor_17": inputs,
         "keras_tensor_18": hidden
@@ -73,14 +73,15 @@ async function evaluate(sentence) {
     let enc_out = encOutputAndState[0];
     let enc_hidden = encOutputAndState[1];
 
-    // Iniciar decoder
     let dec_hidden = enc_hidden;
-    let dec_input = tf.tensor([[targ_lang_word_index['<start>']]], [1,1], 'float32');
+    let dec_input = tf.tensor([[targ_lang_word_index['<start>']]], [1,1], 'int32'); // también int32
 
     let result = "";
     for (let t = 0; t < max_length_targ; t++) {
-        // Ahora no se especifican las salidas en el decoder tampoco.
-        // decoder da [predictions, dec_hidden, (posible atención)]
+        // De nuevo, sin especificar salidas.
+        // Igual, si no funciona con objeto, prueba con array:
+        // const decOutputAndState = await decoderModel.executeAsync([dec_input, dec_hidden, enc_out]);
+
         const decOutputAndState = await decoderModel.executeAsync({
             'keras_tensor_21': dec_input,
             'keras_tensor_22': dec_hidden,
@@ -99,14 +100,14 @@ async function evaluate(sentence) {
 
         result += predicted_word + " ";
 
-        dec_input = tf.tensor([[predicted_id]], [1,1], 'float32');
+        dec_input = tf.tensor([[predicted_id]], [1,1], 'int32');
     }
 
     return result.trim();
 }
 
 /**
- * Envía el mensaje del usuario, obtiene la respuesta y la muestra
+ * Enviar mensaje.
  */
 async function sendMessage() {
     const userInputElem = document.getElementById('userInput');
@@ -130,5 +131,4 @@ async function sendMessage() {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-// Cargar los modelos al iniciar
 loadModels();

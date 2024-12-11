@@ -62,16 +62,15 @@ async function evaluate(sentence) {
     // Estado inicial del encoder
     let hidden = initializeHiddenState();
 
-    // Ejecutar encoder con executeAsync()
-    // No especificamos las salidas por nombre, tomamos todo el array resultante.
+    // Antes se especificaban salidas, ahora no.
+    // executeAsync() devolverá un array con todas las salidas en su orden.
+    // Según tu modelo: encoder da [enc_out, enc_hidden].
     const encOutputAndState = await encoderModel.executeAsync({
         "keras_tensor_17": inputs,
         "keras_tensor_18": hidden
     });
-    
-    // Según lo obtenido anteriormente, encOutputAndState devuele un array
-    // donde encOutputAndState[0] = enc_out, encOutputAndState[1] = enc_hidden.
-    let enc_out = encOutputAndState[0]; 
+
+    let enc_out = encOutputAndState[0];
     let enc_hidden = encOutputAndState[1];
 
     // Iniciar decoder
@@ -80,16 +79,16 @@ async function evaluate(sentence) {
 
     let result = "";
     for (let t = 0; t < max_length_targ; t++) {
-        // Igual que con el encoder, no especificamos las salidas por nombre
+        // Ahora no se especifican las salidas en el decoder tampoco.
+        // decoder da [predictions, dec_hidden, (posible atención)]
         const decOutputAndState = await decoderModel.executeAsync({
             'keras_tensor_21': dec_input,
             'keras_tensor_22': dec_hidden,
             'keras_tensor_23': enc_out
         });
 
-        // Suponiendo decOutputAndState[0] = predictions, decOutputAndState[1] = dec_hidden, decOutputAndState[2] = attention (si existe)
         let predictions = decOutputAndState[0];
-        dec_hidden = decOutputAndState[1]; 
+        dec_hidden = decOutputAndState[1];
 
         const predicted_id = (await predictions.argMax(-1).data())[0];
         const predicted_word = targ_lang_index_word[predicted_id];
@@ -115,16 +114,13 @@ async function sendMessage() {
     const userText = userInputElem.value.trim();
     if (!userText) return;
 
-    // Mostrar el mensaje del usuario
     let userMessageDiv = document.createElement('div');
     userMessageDiv.textContent = "Usuario: " + userText;
     userMessageDiv.style.fontWeight = "bold";
     chatContainer.appendChild(userMessageDiv);
 
-    // Limpiar el input
     userInputElem.value = "";
 
-    // Obtener respuesta del chatbot
     let botResponse = await evaluate(userText);
 
     let botMessageDiv = document.createElement('div');

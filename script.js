@@ -19,12 +19,12 @@ function tokenizeInput(sentence) {
     if (tokens.length > max_length_inp) {
         tokens = tokens.slice(0, max_length_inp);
     }
-    // Ajusta a int32 si tu embedding original era int32:
-    return tf.tensor([tokens], [1, max_length_inp], 'int32');
+    // Ajusta a float32 si tu embedding original era float32:
+    return tf.tensor([tokens], [1, max_length_inp], 'float32');
 }
 
 function initializeHiddenState() {
-    // El hidden suele ser float32. Ajusta si era int32 en tu entrenamiento.
+    // El hidden suele ser float32. Ajusta si era float32 en tu entrenamiento.
     return tf.zeros([1, units], 'float32');
 }
 
@@ -54,7 +54,7 @@ async function evaluate(sentence) {
     let enc_hidden = encOutputAndState[1];
 
     let dec_hidden = enc_hidden;
-    let dec_input = tf.tensor([[targ_lang_word_index['<start>']]], [1,1], 'int32');
+    let dec_input = tf.tensor([[targ_lang_word_index['<start>']]], [1,1], 'float32');
 
     let result = "";
     for (let t = 0; t < max_length_targ; t++) {
@@ -76,7 +76,7 @@ async function evaluate(sentence) {
 
         result += predicted_word + " ";
 
-        dec_input = tf.tensor([[predicted_id]], [1,1], 'int32');
+        dec_input = tf.tensor([[predicted_id]], [1,1], 'float32');
     }
 
     return result.trim();

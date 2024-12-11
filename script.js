@@ -56,9 +56,29 @@ async function evaluate(sentence) {
     let result = "";
 
     try {
-        // Ejecutar el encoder de forma asíncrona
-        const encOutputAndState = await encoderModel.executeAsync([inputs, hidden]);
+        // Depuración: Mostrar las formas de los tensores de entrada
+        console.log("Inputs shape:", inputs.shape);
+        console.log("Hidden shape:", hidden.shape);
 
+        // Obtener los nombres de las entradas del encoder
+        const encoderInputNames = encoderModel.inputs.map(input => input.name);
+        console.log("Nombres de entradas del encoder:", encoderInputNames);
+
+        // Preparar las entradas como un objeto con los nombres de las entradas
+        const encoderInputs = {};
+        encoderModel.inputs.forEach((input, index) => {
+            if (index === 0) {
+                encoderInputs[input.name] = inputs;
+            } else if (index === 1) {
+                encoderInputs[input.name] = hidden;
+            }
+        });
+
+        // Ejecutar el encoder de forma asíncrona
+        const encOutputAndState = await encoderModel.executeAsync(encoderInputs);
+        console.log("EncOutputAndState:", encOutputAndState);
+
+        // Obtener las salidas del encoder
         const enc_out = encOutputAndState[0];
         const enc_hidden = encOutputAndState[1];
 
@@ -70,8 +90,30 @@ async function evaluate(sentence) {
         let dec_input = tf.tensor([[targ_lang_word_index['<start>']]], [1, 1], 'float32');
 
         for (let t = 0; t < max_length_targ; t++) {
+            // Depuración: Mostrar las formas de los tensores de entrada del decoder
+            console.log("Decoder Input shape:", dec_input.shape);
+            console.log("Decoder Hidden shape:", dec_hidden.shape);
+            console.log("Encoder Output shape:", enc_out.shape);
+
+            // Obtener los nombres de las entradas del decoder
+            const decoderInputNames = decoderModel.inputs.map(input => input.name);
+            console.log("Nombres de entradas del decoder:", decoderInputNames);
+
+            // Preparar las entradas del decoder
+            const decoderInputs = {};
+            decoderModel.inputs.forEach((input, index) => {
+                if (index === 0) {
+                    decoderInputs[input.name] = dec_input;
+                } else if (index === 1) {
+                    decoderInputs[input.name] = dec_hidden;
+                } else if (index === 2) {
+                    decoderInputs[input.name] = enc_out;
+                }
+            });
+
             // Ejecutar el decoder de forma asíncrona
-            const decOutputAndState = await decoderModel.executeAsync([dec_input, dec_hidden, enc_out]);
+            const decOutputAndState = await decoderModel.executeAsync(decoderInputs);
+            console.log("DecOutputAndState:", decOutputAndState);
 
             const predictions = decOutputAndState[0];
             dec_hidden = decOutputAndState[1];
@@ -79,6 +121,7 @@ async function evaluate(sentence) {
             // Obtener el id de la palabra predicha
             const predicted_id = predictions.argMax(-1).dataSync()[0];
             const predicted_word = targ_lang_index_word[predicted_id];
+            console.log(`Predicted ID: ${predicted_id}, Predicted Word: ${predicted_word}`);
 
             // Liberar tensores temporales
             predictions.dispose();

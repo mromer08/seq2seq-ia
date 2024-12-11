@@ -30,7 +30,7 @@ window.inp_lang_word_index = {
   }
   
   // Parámetros del modelo (ejemplo, deben coincidir con el entrenamiento)
-  window.max_length_inp = 40;  // ajusta según el entrenamiento real
+  window.max_length_inp = 62;  // ajusta según el entrenamiento real
   window.max_length_targ = 40; // ajusta según el entrenamiento real
   window.units = 512; // ajusta según lo entrenado
   

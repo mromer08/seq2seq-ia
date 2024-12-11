@@ -34,7 +34,8 @@ function tokenizeInput(sentence) {
  * Genera un vector de estado oculto inicial (cero).
  */
 function initializeHiddenState() {
-    return tf.zeros([1, units]);
+    // Asegurarse de que sea float32
+    return tf.zeros([1, units], 'float32');
 }
 
 /**
@@ -56,12 +57,12 @@ async function evaluate(sentence) {
     // Estado inicial del encoder
     let hidden = initializeHiddenState();
 
-    // Ejecutar encoder
-    // Ajusta los nombres según tu modelo exportado (usa console.log para ver encoderModel.inputs/outputs)
+    // Ejecutar encoder con executeAsync()
     const encOutputAndState = await encoderModel.executeAsync(
-        { "keras_tensor_17": inputs, "keras_tensor_18": hidden },  // Ajustar si difiere
-        ['Identity_1','Identity'] // Ajustar si difiere
+        { "keras_tensor_17": inputs, "keras_tensor_18": hidden }, // Ajustar nombres si difieren
+        ['Identity_1','Identity'] // Ajustar salidas si difieren
     );
+
     let enc_out = encOutputAndState[0]; 
     let enc_hidden = encOutputAndState[1];
 
@@ -71,10 +72,9 @@ async function evaluate(sentence) {
 
     let result = "";
     for (let t = 0; t < max_length_targ; t++) {
-        // Ajustar nombres según decoderModel.inputs/outputs
         const decOutputAndState = await decoderModel.executeAsync(
-            { 'keras_tensor_21': dec_input, 'keras_tensor_22': dec_hidden, 'keras_tensor_23': enc_out },
-            ['Identity_2','Identity_1','Identity'] // Ajustar si difiere
+            { 'keras_tensor_21': dec_input, 'keras_tensor_22': dec_hidden, 'keras_tensor_23': enc_out }, // Ajustar nombres si difieren
+            ['Identity_2','Identity_1','Identity'] // Ajustar salidas si difieren
         );
         let predictions = decOutputAndState[0];
         dec_hidden = decOutputAndState[1]; 
@@ -88,7 +88,6 @@ async function evaluate(sentence) {
 
         result += predicted_word + " ";
 
-        // Actualizar dec_input
         dec_input = tf.tensor([[predicted_id]], [1,1], 'float32');
     }
 

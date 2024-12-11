@@ -45,10 +45,13 @@ function initializeHiddenState() {
  */
 async function loadModels() {
     try {
-        // Cambia a loadLayersModel si tus modelos son de Keras
+        console.log("Cargando el modelo encoder...");
         encoderModel = await tf.loadLayersModel('./encoder_model_js/model.json');
+        console.log("Modelo encoder cargado exitosamente!");
+        
+        console.log("Cargando el modelo decoder...");
         decoderModel = await tf.loadLayersModel('./decoder_model_js/model.json');
-        console.log("Modelos cargados exitosamente!");
+        console.log("Modelo decoder cargado exitosamente!");
 
         console.log("Entradas encoder:", encoderModel.inputs);
         console.log("Salidas encoder:", encoderModel.outputs);
@@ -73,11 +76,20 @@ async function evaluate(sentence) {
     let result = "";
 
     try {
+        // Depuración: Mostrar las formas de los tensores de entrada
+        console.log("Inputs shape:", inputs.shape);
+        console.log("Hidden shape:", hidden.shape);
+
         // Ejecutar el encoder
-        // Asumimos que encoderModel.predict devuelve [enc_out, enc_hidden]
+        console.log("Ejecutando el encoder...");
         const encOutputs = encoderModel.predict([inputs, hidden]);
+        console.log("Encoder Outputs:", encOutputs);
         const enc_out = encOutputs[0];
         const enc_hidden = encOutputs[1];
+
+        // Verificar las formas de las salidas del encoder
+        console.log("Enc_out shape:", enc_out.shape);
+        console.log("Enc_hidden shape:", enc_hidden.shape);
 
         // Liberar tensores iniciales
         inputs.dispose();
@@ -87,15 +99,23 @@ async function evaluate(sentence) {
         let dec_input = tf.tensor([[targ_lang_word_index['<start>']]], [1, 1], 'float32');
 
         for (let t = 0; t < max_length_targ; t++) {
+            // Depuración: Mostrar las formas de los tensores de entrada del decoder
+            console.log(`Iteración ${t + 1}:`);
+            console.log("Decoder Input shape:", dec_input.shape);
+            console.log("Decoder Hidden shape:", dec_hidden.shape);
+            console.log("Encoder Output shape:", enc_out.shape);
+
             // Ejecutar el decoder
-            // Asumimos que decoderModel.predict devuelve [predictions, dec_hidden]
+            console.log("Ejecutando el decoder...");
             const decOutputs = decoderModel.predict([dec_input, dec_hidden, enc_out]);
+            console.log("Decoder Outputs:", decOutputs);
             const predictions = decOutputs[0];
             dec_hidden = decOutputs[1];
 
             // Obtener el id de la palabra predicha
             const predicted_id = (await predictions.argMax(-1).data())[0];
             const predicted_word = targ_lang_index_word[predicted_id];
+            console.log(`Predicted ID: ${predicted_id}, Predicted Word: ${predicted_word}`);
 
             // Liberar tensores temporales
             predictions.dispose();

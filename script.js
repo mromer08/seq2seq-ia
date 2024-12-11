@@ -34,7 +34,6 @@ function tokenizeInput(sentence) {
  * Genera un vector de estado oculto inicial (cero).
  */
 function initializeHiddenState() {
-    // Asegurarse de que sea float32
     return tf.zeros([1, units], 'float32');
 }
 
@@ -45,6 +44,12 @@ async function loadModels() {
     encoderModel = await tf.loadGraphModel('./encoder_model_js/model.json');
     decoderModel = await tf.loadGraphModel('./decoder_model_js/model.json');
     console.log("Modelos cargados exitosamente!");
+
+    console.log("Entradas encoder:", encoderModel.inputs);
+    console.log("Salidas encoder:", encoderModel.outputs);
+
+    console.log("Entradas decoder:", decoderModel.inputs);
+    console.log("Salidas decoder:", decoderModel.outputs);
 }
 
 /**
@@ -58,11 +63,14 @@ async function evaluate(sentence) {
     let hidden = initializeHiddenState();
 
     // Ejecutar encoder con executeAsync()
-    const encOutputAndState = await encoderModel.executeAsync(
-        { "keras_tensor_17": inputs, "keras_tensor_18": hidden }, // Ajustar nombres si difieren
-        ['Identity_1','Identity'] // Ajustar salidas si difieren
-    );
-
+    // No especificamos las salidas por nombre, tomamos todo el array resultante.
+    const encOutputAndState = await encoderModel.executeAsync({
+        "keras_tensor_17": inputs,
+        "keras_tensor_18": hidden
+    });
+    
+    // Según lo obtenido anteriormente, encOutputAndState devuele un array
+    // donde encOutputAndState[0] = enc_out, encOutputAndState[1] = enc_hidden.
     let enc_out = encOutputAndState[0]; 
     let enc_hidden = encOutputAndState[1];
 
@@ -72,10 +80,14 @@ async function evaluate(sentence) {
 
     let result = "";
     for (let t = 0; t < max_length_targ; t++) {
-        const decOutputAndState = await decoderModel.executeAsync(
-            { 'keras_tensor_21': dec_input, 'keras_tensor_22': dec_hidden, 'keras_tensor_23': enc_out }, // Ajustar nombres si difieren
-            ['Identity_2','Identity_1','Identity'] // Ajustar salidas si difieren
-        );
+        // Igual que con el encoder, no especificamos las salidas por nombre
+        const decOutputAndState = await decoderModel.executeAsync({
+            'keras_tensor_21': dec_input,
+            'keras_tensor_22': dec_hidden,
+            'keras_tensor_23': enc_out
+        });
+
+        // Suponiendo decOutputAndState[0] = predictions, decOutputAndState[1] = dec_hidden, decOutputAndState[2] = attention (si existe)
         let predictions = decOutputAndState[0];
         dec_hidden = decOutputAndState[1]; 
 

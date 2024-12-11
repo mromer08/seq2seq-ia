@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Chatbot</title>
+</head>
+<body>
+    <h1>Chatbot en JavaScript</h1>
+    <div>
+        <input type="text" id="userInput" placeholder="Escribe algo..." style="width:300px;" />
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
+    <div id="chatContainer" style="margin-top:20px;border:1px solid #ccc;padding:10px;width:400px;height:300px;overflow:auto;">
+        <!-- Aquí se mostrarán las conversaciones -->
+    </div>
+
+    <!-- Cargar TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+    <!-- Cargar datos de tokenización (suponiendo que tokenizer_data.js contiene los diccionarios) -->
+    <script src="tokenizer_data.js"></script>
+    <!-- Script principal -->
+    <script src="script.js"></script>
+</body>
+</html>

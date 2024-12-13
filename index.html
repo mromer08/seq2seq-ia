@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot en Español</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script> <!-- TensorFlow.js -->
-    <script defer src="chatbot.js"></script> <!-- Tu archivo JS donde está el código -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script> <!-- TensorFlow.js 
+    <script defer src="chatbot.js"></script> <!-- Tu archivo JS donde está el código
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -135,4 +135,78 @@
         initializeChatbot();
     </script>
 </body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot with TensorFlow.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+</head>
+<body>
+    <h1>Chatbot Interface</h1>
+    
+    <div id="chat-container">
+        <!-- Chat history will be shown here -->
+    </div>
+
+    <textarea id="user-input" placeholder="Type your message here..." rows="4" cols="50"></textarea><br>
+    <button onclick="sendMessage()">Send Message</button>
+
+    <script>
+        let model;
+
+        // Cargar el modelo
+        async function loadModel() {
+            model = await tf.loadGraphModel('modelo_js/model.json');
+            console.log("Model loaded");
+        }
+
+        // Función para enviar el mensaje y recibir la respuesta
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+            if (userInput) {
+                // Mostrar el mensaje del usuario en el chat
+                displayMessage("You: " + userInput);
+
+                // Aquí deberías agregar la lógica para preprocesar la entrada (userInput)
+                // y luego pasársela al modelo para generar una respuesta.
+                const response = await generateResponse(userInput);
+
+                // Mostrar la respuesta generada por el modelo
+                displayMessage("Bot: " + response);
+            }
+            document.getElementById('user-input').value = "";  // Limpiar el campo de texto
+        }
+
+        // Función para mostrar los mensajes en el chat
+        function displayMessage(message) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageElement = document.createElement('p');
+            messageElement.textContent = message;
+            chatContainer.appendChild(messageElement);
+        }
+
+        // Función para generar una respuesta usando el modelo
+        async function generateResponse(userInput) {
+            // Aquí deberías implementar la lógica para convertir la entrada del usuario
+            // en un formato que pueda ser procesado por el modelo y generar la respuesta.
+            // Dependiendo de tu modelo, esto podría ser un tokenizador y un paso de inferencia.
+            const inputTensor = tf.tensor([userInput]);  // Ejemplo muy básico
+            const prediction = model.predict(inputTensor);  // Ajusta según tu modelo
+
+            // Aquí deberías realizar alguna postprocesamiento de la salida
+            // (por ejemplo, convertir el índice de predicción a texto).
+            const output = prediction.dataSync();  // Ajusta según el formato de salida de tu modelo
+
+            return "This is a placeholder response";  // Devuelve una respuesta ficticia para el ejemplo
+        }
+
+        // Cargar el modelo al inicio
+        loadModel();
+    </script>
+</body>
 </html>
+

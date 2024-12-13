@@ -162,6 +162,7 @@
         async function loadModel() {
             model = await tf.loadGraphModel('modelo_js/model.json');
             console.log("Model loaded");
+            console.log(model);
         }
 
         // Función para enviar el mensaje y recibir la respuesta

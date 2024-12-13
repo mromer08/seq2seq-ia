@@ -196,7 +196,8 @@
             // en un formato que pueda ser procesado por el modelo y generar la respuesta.
             // Dependiendo de tu modelo, esto podría ser un tokenizador y un paso de inferencia.
             const inputTensor = tf.tensor([userInput]);  // Ejemplo muy básico
-            const prediction = model.predict(inputTensor);  // Ajusta según tu modelo
+            const inputTensor2 = tf.tensor([userInput]);
+            const prediction = model.predict([inputTensor, inputTensor2]);  // Ajusta según tu modelo
 
             // Aquí deberías realizar alguna postprocesamiento de la salida
             // (por ejemplo, convertir el índice de predicción a texto).
